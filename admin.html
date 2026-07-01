@@ -77,6 +77,7 @@ tbody td { padding:10px 12px; vertical-align:top; }
 .sc.confirmed { background:#06C755; cursor:pointer; }
 .sc.cancelled { background:#ccc; }
 .sc.clickable:hover { filter:brightness(.9); }
+.sc { width:36px; height:42px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:white; text-shadow:0 1px 2px rgba(0,0,0,.3); }
 
 /* FORMS */
 .form-card { background:white; border-radius:12px; padding:18px; margin:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
@@ -403,7 +404,8 @@ async function loadStatusGrid() {
     COURTS.forEach(co=>{
       const bk=cellMap[`${co}|${slot}`];
       const cls=bk?(bk.status==='CONFIRMED'?'confirmed':bk.status==='CANCELLED'?'cancelled':'pending'):'free';
-      const lbl=bk?(bk.status==='CONFIRMED'?'✓':bk.status==='CANCELLED'?'✗':'⏳'):'';
+      const icon=bk?(bk.status==='CONFIRMED'?'✓':bk.status==='CANCELLED'?'✗':'⏳'):'';
+      const lbl=bk?`${icon}<span style="font-size:7px;font-weight:400;margin-top:1px;display:block;max-width:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(bk.name||'').slice(0,5)}</span>`:'';
       const oc=bk?`showDetail('${bk.bookingId}')`:'' ;
       h+=`<td><div class="sc ${cls}${bk?' clickable':''}" title="${bk?bk.name+' '+bk.phone:''}" onclick="${oc}">${lbl}</div></td>`;
     });
