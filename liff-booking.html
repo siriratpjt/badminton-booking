@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🏸 จองสนามแบดมินตัน</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #06C755; --dgreen: #049940;
+      --bg: #f0f2f5; --white: #fff;
+      --text: #1a1a1a; --gray: #888;
+      --light: #e8e8e8; --booked: #d0d0d0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .screen { display: none; min-height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* Header */
+    .hdr { background: var(--green); color: white; padding: 13px 14px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 20; }
+    .hdr h2 { font-size: 17px; font-weight: 700; flex: 1; }
+    .hdr p { font-size: 12px; opacity: .85; }
+    .badge { background: rgba(255,255,255,.25); border-radius: 10px; padding: 2px 9px; font-size: 12px; white-space: nowrap; }
+    .back { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0 4px; }
+
+    /* Content / Footer */
+    .content { flex: 1; padding: 14px; }
+    .footer { padding: 13px 14px; background: white; border-top: 1px solid var(--light); display: flex; gap: 10px; }
+
+    /* Buttons */
+    .btn { border: none; border-radius: 10px; padding: 13px 16px; font-size: 16px; font-family: inherit; font-weight: 600; cursor: pointer; flex: 1; transition: opacity .15s; }
+    .btn:active { opacity: .75; }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-g  { background: var(--green); color: white; }
+    .btn-s  { background: var(--light); color: var(--text); }
+    .btn-o  { background: white; color: var(--green); border: 2px solid var(--green); }
+
+    /* Cards */
+    .card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+
+    /* Inputs */
+    input[type="date"], .inp {
+      width: 100%; border: 2px solid var(--light); border-radius: 10px;
+      padding: 12px 14px; font-size: 16px; font-family: inherit; outline: none; transition: border-color .2s;
+    }
+    input[type="date"]:focus, .inp:focus { border-color: var(--green); }
+    .lbl { font-size: 13px; color: var(--gray); margin-bottom: 5px; display: block; }
+    .ig  { margin-bottom: 14px; }
+
+    /* Summary rows */
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--light); font-size: 15px; }
+    .row:last-child { border-bottom: none; }
+    .row .l { color: var(--gray); }
+    .row .v { font-weight: 600; }
+    .row.big .v { font-size: 22px; color: var(--green); }
+
+    /* ── COURT GRID TABLE ── */
+    .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; background: white; }
+    .gtable { border-collapse: collapse; width: max-content; }
+
+    .gtable thead th {
+      background: var(--green); color: white; font-size: 13px; font-weight: 700;
+      padding: 9px 0; text-align: center; min-width: 50px;
+      position: sticky; top: 0; z-index: 12;
+    }
+    .gtable thead th:first-child {
+      left: 0; z-index: 13; min-width: 68px; background: var(--dgreen);
+    }
+
+    /* price sub-label in header */
+    .gtable thead .ph { font-size: 10px; font-weight: 400; opacity: .85; }
+
+    /* Time column */
+    .tcell {
+      background: #f5f5f5; font-size: 12px; font-weight: 700; color: #444;
+      padding: 0 8px; text-align: right; white-space: nowrap;
+      position: sticky; left: 0; z-index: 10;
+      border-right: 2px solid #ccc; min-width: 68px; height: 46px;
+    }
+    .tcell .tp { font-size: 10px; font-weight: 400; color: var(--gray); }
+
+    /* Grid cells */
+    .gcell {
+      width: 50px; height: 46px;
+      border: 1px solid #e0e0e0;
+      cursor: pointer; transition: background .12s;
+      user-select: none;
+    }
+    .gcell.avail  { background: white; }
+    .gcell.avail:hover  { background: #e8f9f0; }
+    .gcell.booked { background: var(--booked); cursor: not-allowed; }
+    .gcell.sel    { background: var(--green); }
+
+    /* Legend */
+    .legend { display: flex; gap: 14px; padding: 10px 14px; background: white; font-size: 13px; align-items: center; border-bottom: 1px solid var(--light); }
+    .leg-dot { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #ddd; flex-shrink: 0; }
+
+    /* Selection bar */
+    #sel-bar {
+      background: white; border-top: 2px solid var(--green);
+      padding: 10px 14px; display: none;
+      flex-direction: column; gap: 4px;
+    }
+    #sel-bar .sel-info { font-size: 14px; color: var(--gray); }
+    #sel-bar .sel-price { font-size: 20px; font-weight: 700; color: var(--green); }
+
+    /* Spinner */
+    .spin { width: 32px; height: 32px; border: 3px solid var(--light); border-top-color: var(--green); border-radius: 50%; animation: sp .7s linear infinite; margin: 30px auto; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+
+    /* QR */
+    #qr-box { text-align: center; padding: 14px 0; }
+    #qr-box canvas, #qr-box img { border-radius: 8px; max-width: 220px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOADING ═══ -->
+<div id="s-load" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
+    <div style="font-size:56px;margin-bottom:16px">🏸</div>
+    <div class="spin"></div>
+    <p style="color:var(--gray);margin-top:12px">กำลังโหลด...</p>
+  </div>
+</div>
+
+<!-- ═══ STEP 1: DATE ═══ -->
+<div id="s-date" class="screen">
+  <div class="hdr">
+    <div style="font-size:22px">🏸</div>
+    <div style="flex:1"><h2>จองสนามแบดมินตัน</h2><p>สายฟ้าฟาด x MamaBad</p></div>
+    <span class="badge">1/4</span>
+  </div>
+  <div class="content">
+    <div class="card">
+      <p class="lbl" style="margin-bottom:8px;font-weight:600;font-size:15px">เลือกวันที่</p>
+      <input type="date" id="date-inp" onchange="onDateChange()">
+    </div>
+    <div class="card" id="day-card" style="display:none">
+      <div class="row"><span class="l">วัน</span><span class="v" id="day-name"></span></div>
+      <div class="row"><span class="l">เวลาเปิด-ปิด</span><span class="v" id="open-hr"></span></div>
+      <div class="row"><span class="l">ราคา</span><span class="v" id="price-desc"></span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-g" id="btn-d" onclick="toGrid()" disabled>ดูตารางสนาม →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 2: GRID ═══ -->
+<div id="s-grid" class="screen">
+  <div class="hdr">
+    <button class="back" onclick="toStep(1)">←</button>
+    <div style="flex:1"><h2>เลือกสนาม & เวลา</h2><p id="grid-sub"></p></div>
+    <span class="badge">2/4</span>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="leg-dot" style="background:white"></div><span>ว่าง</span>
+    <div class="leg-dot" style="background:var(--booked)"></div><span>จองแล้ว</span>
+    <div class="leg-dot" style="background:var(--green);border-color:var(--green)"></div><span>ที่คุณเลือก</span>
+    <span style="margin-left:auto;font-size:12px;color:var(--gray)">← เลื่อนดูได้</span>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrap" style="flex:1;overflow-y:auto">
+    <div id="grid-loading" style="text-align:center;padding:40px">
+      <div class="spin"></div>
+      <p style="color:var(--gray);font-size:14px;margin-top:8px">กำลังโหลดตาราง...</p>
+    </div>
+    <table class="gtable" id="gtable" style="display:none"></table>
+  </div>
+
+  <!-- Selection summary bar -->
+  <div id="sel-bar">
+    <div class="sel-info" id="sel-info"></div>
+    <div class="sel-price" id="sel-price"></div>
+  </div>
+
+  <div class="footer">
+    <button class="btn btn-s" onclick="toStep(1)">← ย้อนกลับ</button>
+    <button class="btn btn-g" id="btn-g" onclick="toContact()" disabled>ถัดไป →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 3: CONTACT ═══ -->
+<div id="s-contact" class="screen">
+  <div class="hdr">
+    <button class="back" onclick="toStep(2)">←</button>
+    <div style="flex:1"><h2>ข้อมูลการจอง</h2></div>
+    <span class="badge">3/4</span>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ig">
+        <label class="lbl">ชื่อ-นามสกุล *</label>
+        <input type="text" id="inp-name" class="inp" placeholder="เช่น สมชาย ใจดี">
+      </div>
+      <div class="ig" style="margin-bottom:0">
+        <label class="lbl">เบอร์โทรศัพท์ *</label>
+        <input type="tel" id="inp-phone" class="inp" placeholder="เช่น 0812345678" maxlength="10">
+      </div>
+    </div>
+
+    <div class="card" style="background:#e8f9f0;border:1px solid #c3e6cb">
+      <p style="font-size:14px;font-weight:700;margin-bottom:10px">📋 สรุปการจอง</p>
+      <div class="row"><span class="l">วันที่</span><span class="v" id="cf-date"></span></div>
+      <div id="cf-lines"></div>
+      <div class="row big"><span class="l">ราคารวม</span><span class="v" id="cf-total"></span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-s" onclick="toStep(2)">← ย้อนกลับ</button>
+    <button class="btn btn-g" id="btn-sub" onclick="submit()">จองเลย 🏸</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 4: PAYMENT ═══ -->
+<div id="s-pay" class="screen">
+  <div class="hdr">
+    <div style="flex:1"><h2>ชำระเงิน</h2><p>สแกน QR แล้วส่งสลิปในไลน์</p></div>
+    <span class="badge">4/4</span>
+  </div>
+  <div class="content">
+    <div class="card" style="text-align:center">
+      <p style="color:var(--gray);font-size:14px;margin-bottom:4px">ยอดที่ต้องชำระ</p>
+      <p style="font-size:42px;font-weight:700;color:var(--green);margin-bottom:14px" id="pay-amt"></p>
+      <div id="qr-box"></div>
+      <p style="font-size:13px;color:var(--gray);margin-top:10px">พร้อมเพย์ · สายฟ้าฟาด x MamaBad</p>
+    </div>
+
+    <div class="card" style="background:#fff3cd;border:1px solid #ffe082">
+      <p style="font-weight:700;margin-bottom:8px">📌 วิธีชำระเงิน</p>
+      <p style="font-size:14px;line-height:2;color:#555">
+        1. เปิดแอปธนาคาร → สแกน QR ด้านบน<br>
+        2. ตรวจสอบยอด <strong id="pay-amt2"></strong> บาท<br>
+        3. โอนเงิน แล้ว <strong>ถ่ายสลิปส่งในแชทไลน์</strong><br>
+        4. รอเจ้าหน้าที่ยืนยัน (ภายใน 15 นาที)
+      </p>
+    </div>
+
+    <div class="card">
+      <p style="font-size:13px;color:var(--gray)">รหัสการจองของคุณ</p>
+      <p style="font-size:22px;font-weight:700;letter-spacing:1px" id="bk-id"></p>
+    </div>
+  </div>
+  <div class="footer" style="flex-direction:column;gap:8px">
+    <button class="btn btn-g" onclick="sendSlip()">📤 ส่งสลิปในแชท LINE</button>
+    <button class="btn btn-o" onclick="closeApp()">ปิด</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<script>
+// ══ CONFIG ══════════════════════════════════════════
+const LIFF_ID      = 'YOUR_LIFF_ID';
+const API_URL      = 'YOUR_APPS_SCRIPT_URL';
+const PROMPTPAY_ID = '3769900027483';
+
+const COURTS = ['C1','C2','C3','C4','C5','C6','C7','C8'];
+
+const WD_SLOTS = [
+  '13:00-14:00','14:00-15:00','15:00-16:00','16:00-17:00',
+  '17:00-18:00','18:00-19:00','19:00-20:00','20:00-21:00',
+  '21:00-22:00','22:00-23:00','23:00-00:00','00:00-01:00'
+];
+const WE_SLOTS = [
+  '10:00-11:00','11:00-12:00','12:00-13:00', ...WD_SLOTS
+];
+
+const TH_DAYS   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+const TH_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+// ══ STATE ═══════════════════════════════════════════
+let BK = { date:'', isWeekend:false, userId:'', bookingId:'', totalAmount:0 };
+let selections = [];   // [{court:'C1', slot:'17:00-18:00'}, ...]
+let bookedSet  = new Set();  // "C1|17:00-18:00"
+let profile    = {};
+
+// ══ INIT ════════════════════════════════════════════
+async function init() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    profile    = await liff.getProfile();
+    BK.userId  = profile.userId;
+  } catch(e) { console.warn('LIFF:', e); }
+
+  const di  = document.getElementById('date-inp');
+  const now = new Date();
+  di.min = ymd(now);
+  const mx = new Date(now); mx.setDate(mx.getDate()+30);
+  di.max = ymd(mx);
+
+  show('s-date');
+}
+
+// ══ NAVIGATION ═══════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function toStep(n) {
+  if (n===1) show('s-date');
+  if (n===2) show('s-grid');
+}
+
+// ══ STEP 1: DATE ════════════════════════════════════
+function onDateChange() {
+  const v = document.getElementById('date-inp').value;
+  if (!v) return;
+  const d  = new Date(v+'T12:00:00');
+  const wd = d.getDay();
+  BK.date      = v;
+  BK.isWeekend = (wd===0||wd===6);
+  selections   = [];
+  bookedSet    = new Set();
+
+  document.getElementById('day-name').textContent =
+    `วัน${TH_DAYS[wd]}ที่ ${d.getDate()} ${TH_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+  document.getElementById('open-hr').textContent = BK.isWeekend ? '10:00 – 01:00' : '13:00 – 01:00';
+  document.getElementById('price-desc').textContent = BK.isWeekend
+    ? '240 บาท/ชั่วโมง (ทุกช่วงเวลา)'
+    : '220 บาท (13-16 น.)  |  240 บาท (16 น. ขึ้นไป)';
+
+  document.getElementById('day-card').style.display = 'block';
+  document.getElementById('btn-d').disabled = false;
+}
+
+// ══ STEP 2: GRID ════════════════════════════════════
+async function toGrid() {
+  document.getElementById('grid-sub').textContent = thaiDate(BK.date);
+  document.getElementById('gtable').style.display = 'none';
+  document.getElementById('grid-loading').style.display = 'block';
+  document.getElementById('sel-bar').style.display = 'none';
+  document.getElementById('btn-g').disabled = true;
+  selections = [];
+  show('s-grid');
+
+  // Fetch ALL booked slots for this date (all courts)
+  try {
+    const r = await fetch(`${API_URL}?action=getAvailability&date=${BK.date}`);
+    const d = await r.json();
+    bookedSet = new Set((d.booked || []).map(b => `${b.court}|${b.slot}`));
+  } catch(e) { bookedSet = new Set(); }
+
+  renderGrid();
+}
+
+function renderGrid() {
+  const slots = BK.isWeekend ? WE_SLOTS : WD_SLOTS;
+
+  // Build header
+  let h = '<thead><tr><th style="text-align:left;padding-left:8px">เวลา</th>';
+  COURTS.forEach(c => h += `<th>${c}</th>`);
+  h += '</tr></thead><tbody>';
+
+  // Build rows
+  slots.forEach(slot => {
+    const startH = parseInt(slot);
+    const price  = BK.isWeekend ? 240 : (startH>=13&&startH<=15 ? 220 : 240);
+    h += `<tr>
+      <td class="tcell">${slot.split('-')[0]}<br><span class="tp">${price}฿</span></td>`;
+    COURTS.forEach(court => {
+      const key    = `${court}|${slot}`;
+      const booked = bookedSet.has(key);
+      h += `<td class="gcell ${booked?'booked':'avail'}"
+              data-court="${court}" data-slot="${slot}"
+              onclick="toggleCell(this,'${court}','${slot}')"></td>`;
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+
+  const t = document.getElementById('gtable');
+  t.innerHTML = h;
+  t.style.display = 'table';
+  document.getElementById('grid-loading').style.display = 'none';
+  updateSelBar();
+}
+
+function toggleCell(el, court, slot) {
+  if (el.classList.contains('booked')) return;
+
+  const key = `${court}|${slot}`;
+  const idx = selections.findIndex(s => s.court===court && s.slot===slot);
+
+  if (idx > -1) {
+    selections.splice(idx,1);
+    el.classList.remove('sel');
+    el.classList.add('avail');
+  } else {
+    selections.push({court, slot});
+    el.classList.remove('avail');
+    el.classList.add('sel');
+  }
+  updateSelBar();
+}
+
+function updateSelBar() {
+  const total = selections.reduce((s,x) => s + slotPrice(x.slot, BK.isWeekend), 0);
+  BK.totalAmount = total;
+
+  const bar = document.getElementById('sel-bar');
+  if (selections.length === 0) {
+    bar.style.display = 'none';
+    document.getElementById('btn-g').disabled = true;
+    return;
+  }
+
+  bar.style.display = 'flex';
+  document.getElementById('btn-g').disabled = false;
+
+  // Group by court for display
+  const courtMap = {};
+  selections.forEach(s => {
+    if (!courtMap[s.court]) courtMap[s.court] = [];
+    courtMap[s.court].push(s.slot);
+  });
+  const summary = Object.entries(courtMap)
+    .map(([c,ss]) => `${c}: ${ss.sort().join(', ')}`)
+    .join('  |  ');
+
+  document.getElementById('sel-info').textContent = `เลือก ${selections.length} ชั่วโมง — ${summary}`;
+  document.getElementById('sel-price').textContent = `฿${total.toLocaleString()}`;
+}
+
+// ══ STEP 3: CONTACT ══════════════════════════════════
+function toContact() {
+  if (selections.length === 0) return;
+
+  const ni = document.getElementById('inp-name');
+  if (!ni.value && profile.displayName) ni.value = profile.displayName;
+
+  // Build summary lines by court
+  const courtMap = {};
+  selections.forEach(s => {
+    if (!courtMap[s.court]) courtMap[s.court] = [];
+    courtMap[s.court].push(s.slot);
+  });
+
+  document.getElementById('cf-date').textContent = thaiDate(BK.date);
+
+  let lines = '';
+  Object.entries(courtMap).forEach(([c,ss]) => {
+    const sorted = ss.sort();
+    const sub    = sorted.reduce((t,sl) => t + slotPrice(sl, BK.isWeekend), 0);
+    lines += `<div class="row">
+      <span class="l">สนาม ${c} (${sorted.length} ชม.)</span>
+      <span class="v">${sorted[0].split('-')[0]}–${sorted[sorted.length-1].split('-')[1]}  ฿${sub}</span>
+    </div>`;
+  });
+  document.getElementById('cf-lines').innerHTML = lines;
+  document.getElementById('cf-total').textContent = `฿${BK.totalAmount.toLocaleString()}`;
+
+  show('s-contact');
+}
+
+async function submit() {
+  const name  = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim();
+  if (!name)                       { alert('กรุณากรอกชื่อ-นามสกุล'); return; }
+  if (!/^0\d{8,9}$/.test(phone))  { alert('กรุณากรอกเบอร์โทร 10 หลัก'); return; }
+
+  const btn = document.getElementById('btn-sub');
+  btn.disabled = true; btn.textContent = 'กำลังจอง...';
+
+  try {
+    // Encode as "C1:17:00-18:00,C3:17:00-18:00"
+    const encoded = selections.map(s=>`${s.court}:${s.slot}`).join(',');
+    const url = `${API_URL}?action=createBooking` +
+      `&date=${BK.date}&selections=${encodeURIComponent(encoded)}` +
+      `&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}` +
+      `&userId=${encodeURIComponent(BK.userId)}&amount=${BK.totalAmount}`;
+
+    const r = await fetch(url);
+    const d = await r.json();
+
+    if (d.success) {
+      BK.bookingId = d.bookingId;
+      showPayment(name);
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + (d.error||'กรุณาลองใหม่'));
+    }
+  } catch(e) {
+    alert('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่');
+  } finally {
+    btn.disabled = false; btn.textContent = 'จองเลย 🏸';
+  }
+}
+
+// ══ STEP 4: PAYMENT ══════════════════════════════════
+function showPayment(name) {
+  document.getElementById('pay-amt').textContent  = `฿${BK.totalAmount.toLocaleString()}`;
+  document.getElementById('pay-amt2').textContent = BK.totalAmount.toLocaleString();
+  document.getElementById('bk-id').textContent    = BK.bookingId;
+
+  const box = document.getElementById('qr-box');
+  box.innerHTML = '';
+  new QRCode(box, {
+    text: ppPayload(PROMPTPAY_ID, BK.totalAmount),
+    width:220, height:220,
+    colorDark:'#000', colorLight:'#fff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  show('s-pay');
+}
+
+function sendSlip() {
+  const courtMap = {};
+  selections.forEach(s => {
+    if (!courtMap[s.court]) courtMap[s.court]=[];
+    courtMap[s.court].push(s.slot);
+  });
+  const detail = Object.entries(courtMap)
+    .map(([c,ss])=>`${c}: ${ss.sort().join(', ')}`)
+    .join('\n');
+
+  const msg =
+    `🏸 แจ้งชำระเงิน\n` +
+    `รหัสจอง: ${BK.bookingId}\n` +
+    `วันที่: ${thaiDate(BK.date)}\n${detail}\n` +
+    `ยอด: ฿${BK.totalAmount.toLocaleString()}\n\n` +
+    `*กรุณาส่งรูปสลิปพร้อมข้อความนี้*`;
+
+  if (liff.isInClient()) {
+    liff.sendMessages([{type:'text',text:msg}])
+      .then(()=>liff.closeWindow())
+      .catch(()=>alert('กรุณาส่งสลิปพร้อมแจ้งรหัส: '+BK.bookingId));
+  } else {
+    alert(msg);
+  }
+}
+
+function closeApp() {
+  if (liff.isInClient()) liff.closeWindow();
+  else show('s-date');
+}
+
+// ══ PRICING ══════════════════════════════════════════
+function slotPrice(slot, isWeekend) {
+  if (isWeekend) return 240;
+  const h = parseInt(slot);
+  return (h>=13&&h<=15) ? 220 : 240;
+}
+
+// ══ PROMPTPAY QR ════════════════════════════════════
+function ppPayload(id, amount) {
+  const clean = id.replace(/\D/g,'');
+  const proxy = clean.length===13
+    ? tlv('02',clean)
+    : tlv('01','0066'+clean.replace(/^0/,''));
+  const merch = tlv('00','A000000677010111')+proxy;
+  let p = tlv('00','01')+tlv('01','12')+tlv('29',merch)+tlv('53','764')+
+          tlv('54',amount.toFixed(2))+tlv('58','TH')+tlv('59','N/A')+tlv('60','Bangkok')+'6304';
+  return p + crc16(p).toString(16).toUpperCase().padStart(4,'0');
+}
+function tlv(t,v){ return t+String(v.length).padStart(2,'0')+v; }
+function crc16(s){
+  let c=0xFFFF;
+  for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF;}
+  return c;
+}
+
+// ══ UTILS ════════════════════════════════════════════
+function thaiDate(v) {
+  const d=new Date(v+'T12:00:00');
+  return `วัน${TH_DAYS[d.getDay()]}ที่ ${d.getDate()} ${TH_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function ymd(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+init();
+</script>
+</body>
+</html>
