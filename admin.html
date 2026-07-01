@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — สายฟ้าฟาด Court Booking</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; }
+
+  .header { background: #1a1a2e; color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 16px; font-weight: 700; }
+  .header span { font-size: 12px; opacity: 0.6; }
+
+  .toolbar { background: white; padding: 12px 16px; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .toolbar input[type="date"] { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; }
+  .toolbar select { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
+  .btn-refresh { padding: 8px 16px; background: #06C755; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  .stats { display: flex; gap: 8px; padding: 12px 16px; flex-wrap: wrap; }
+  .stat-card { background: white; border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 100px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .stat-card .num { font-size: 24px; font-weight: 700; }
+  .stat-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+  .stat-card.pending .num { color: #ff9800; }
+  .stat-card.confirmed .num { color: #06C755; }
+  .stat-card.cancelled .num { color: #f44336; }
+  .stat-card.revenue .num { color: #2196F3; }
+
+  .content { padding: 12px 16px; }
+
+  /* Login */
+  .login-box { max-width: 320px; margin: 60px auto; background: white; border-radius: 16px; padding: 32px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+  .login-box h2 { font-size: 20px; margin-bottom: 8px; }
+  .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+  .login-box input { width: 100%; padding: 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; letter-spacing: 4px; outline: none; margin-bottom: 12px; }
+  .login-box input:focus { border-color: #06C755; }
+  .login-box button { width: 100%; padding: 14px; background: #06C755; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .login-error { color: #f44336; font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  table { width: 100%; border-collapse: collapse; background: white; font-size: 13px; }
+  thead th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: left; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+  tbody tr:hover { background: #f8f9ff; }
+  tbody td { padding: 10px 12px; vertical-align: top; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .badge-pending { background: #fff3e0; color: #e65100; }
+  .badge-confirmed { background: #e8f5e9; color: #2e7d32; }
+  .badge-cancelled { background: #fce4ec; color: #c62828; }
+  .badge-paid { background: #e8f5e9; color: #2e7d32; }
+  .badge-unpaid { background: #fff3e0; color: #e65100; }
+
+  .btn-confirm { padding: 5px 12px; background: #06C755; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; white-space: nowrap; }
+  .btn-cancel { padding: 5px 12px; background: #f44336; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .btn-confirm:disabled, .btn-cancel:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading { text-align: center; padding: 40px; color: #888; }
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid #e0e0e0; border-top-color: #06C755; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  #main { display: none; }
+</style>
+</head>
+<body>
+
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzX-0vPgc4YdgF61tmbj0b4gU4nO19S4HB0riELREOA_im37XxYKBtg6B7ci69KyyZN/exec';
+  const ADMIN_PASS = '1234'; // ← เปลี่ยนรหัสที่นี่
+</script>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:48px;margin-bottom:12px;">🏸</div>
+    <h2>Admin Login</h2>
+    <p>สายฟ้าฟาด Court Booking</p>
+    <input type="password" id="pass-input" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')checkPass()">
+    <button onclick="checkPass()">เข้าสู่ระบบ</button>
+    <div class="login-error" id="login-error">รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="header">
+    <h1>⚙️ จัดการการจอง</h1>
+    <span id="admin-date"></span>
+  </div>
+
+  <div class="toolbar">
+    <input type="date" id="filter-date" onchange="loadBookings()">
+    <select id="filter-status" onchange="loadBookings()">
+      <option value="">ทุกสถานะ</option>
+      <option value="PENDING">รอยืนยัน</option>
+      <option value="CONFIRMED">ยืนยันแล้ว</option>
+      <option value="CANCELLED">ยกเลิก</option>
+    </select>
+    <button class="btn-refresh" onclick="loadBookings()">🔄 รีเฟรช</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card pending"><div class="num" id="cnt-pending">-</div><div class="label">รอยืนยัน</div></div>
+    <div class="stat-card confirmed"><div class="num" id="cnt-confirmed">-</div><div class="label">ยืนยันแล้ว</div></div>
+    <div class="stat-card cancelled"><div class="num" id="cnt-cancelled">-</div><div class="label">ยกเลิก</div></div>
+    <div class="stat-card revenue"><div class="num" id="cnt-revenue">-</div><div class="label">ยอดวันนี้ (฿)</div></div>
+  </div>
+
+  <div class="content">
+    <div id="table-area"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── AUTH ────────────────────────────────────────────────────────
+function checkPass() {
+  const val = document.getElementById('pass-input').value;
+  if (val === ADMIN_PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pass-input').value = '';
+  }
+}
+
+// ── INIT ────────────────────────────────────────────────────────
+function initAdmin() {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
+  document.getElementById('filter-date').value = today;
+  document.getElementById('admin-date').textContent = formatDateTH(today);
+  loadBookings();
+}
+
+// ── LOAD BOOKINGS ───────────────────────────────────────────────
+let allBookings = [];
+
+async function loadBookings() {
+  document.getElementById('table-area').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const date = document.getElementById('filter-date').value;
+  const statusFilter = document.getElementById('filter-status').value;
+
+  try {
+    const url = `${API_URL}?action=getBookings${date ? '&date=' + date : ''}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.success) throw new Error(data.error);
+    allBookings = data.bookings;
+    const filtered = statusFilter ? allBookings.filter(b => b.status === statusFilter) : allBookings;
+    updateStats(allBookings);
+    renderTable(filtered);
+  } catch(e) {
+    document.getElementById('table-area').innerHTML = `<div class="empty">โหลดข้อมูลไม่ได้<br><small>${e.message}</small></div>`;
+  }
+}
+
+// ── STATS ───────────────────────────────────────────────────────
+function updateStats(bookings) {
+  const pending   = bookings.filter(b => b.status === 'PENDING').length;
+  const confirmed = bookings.filter(b => b.status === 'CONFIRMED').length;
+  const cancelled = bookings.filter(b => b.status === 'CANCELLED').length;
+  const revenue   = bookings.filter(b => b.payment === 'PAID').reduce((s,b) => s + (parseFloat(b.amount)||0), 0);
+  document.getElementById('cnt-pending').textContent   = pending;
+  document.getElementById('cnt-confirmed').textContent = confirmed;
+  document.getElementById('cnt-cancelled').textContent = cancelled;
+  document.getElementById('cnt-revenue').textContent   = revenue.toLocaleString();
+}
+
+// ── TABLE ───────────────────────────────────────────────────────
+function renderTable(bookings) {
+  if (!bookings.length) {
+    document.getElementById('table-area').innerHTML = '<div class="empty">ไม่มีการจอง</div>';
+    return;
+  }
+
+  const statusTH = { PENDING:'รอยืนยัน', CONFIRMED:'ยืนยันแล้ว', CANCELLED:'ยกเลิก' };
+  const statusClass = { PENDING:'pending', CONFIRMED:'confirmed', CANCELLED:'cancelled' };
+
+  let html = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>รหัส</th><th>ชื่อ</th><th>โทร</th><th>วันที่</th><th>สนาม / เวลา</th><th>ยอด</th><th>สถานะ</th><th>ชำระ</th><th>จัดการ</th>
+    </tr></thead><tbody>`;
+
+  bookings.forEach(b => {
+    const isCancelled = b.status === 'CANCELLED';
+    const isConfirmed = b.status === 'CONFIRMED';
+    html += `<tr>
+      <td style="font-weight:700;color:#06C755;white-space:nowrap">${b.bookingId}</td>
+      <td>${b.name}</td>
+      <td><a href="tel:${b.phone}" style="color:#2196F3">${b.phone}</a></td>
+      <td style="white-space:nowrap">${formatDateTH(b.date)}</td>
+      <td style="font-size:12px;max-width:180px">${formatSlots(b.slots)}</td>
+      <td style="white-space:nowrap;font-weight:700">฿${(parseFloat(b.amount)||0).toLocaleString()}</td>
+      <td><span class="badge badge-${statusClass[b.status]||'pending'}">${statusTH[b.status]||b.status}</span></td>
+      <td><span class="badge badge-${b.payment==='PAID'?'paid':'unpaid'}">${b.payment==='PAID'?'ชำระแล้ว':'ยังไม่ชำระ'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn-confirm" onclick="confirmBooking('${b.bookingId}',this)" ${isConfirmed||isCancelled?'disabled':''}>✅ ยืนยัน</button>
+        <button class="btn-cancel"  onclick="cancelBooking('${b.bookingId}',this)"  ${isCancelled?'disabled':''}>❌ ยกเลิก</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('table-area').innerHTML = html;
+}
+
+// ── ACTIONS ─────────────────────────────────────────────────────
+async function confirmBooking(id, btn) {
+  if (!confirm(`ยืนยันการจอง ${id} และรับชำระเงินแล้ว?`)) return;
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const r = await fetch(`${API_URL}?action=confirmBooking&bookingId=${id}`);
+    const data = await r.json();
+    if (data.success) { showToast('✅ ยืนยันเรียบร้อย'); loadBookings(); }
+    else { showToast('❌ ' + (data.error||'เกิดข้อผิดพลาด')); btn.disabled=false; btn.textContent='✅ ยืนยัน'; }
+  } catch(e) { showToast('❌ เชื่อมต่อไม่ได้'); btn.disabled=false; btn.textContent='✅ ยืนยัน'; }
+}
+
+async function cancelBooking(id, btn) {
+  if (!confirm(`ยืนยันการยกเลิกการจอง ${id}?`)) return;
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const r = await fetch(`${API_URL}?action=cancelBooking&bookingId=${id}`);
+    const data = await r.json();
+    if (data.success) { showToast('✅ ยกเลิกเรียบร้อย'); loadBookings(); }
+    else { showToast('❌ ' + (data.error||'เกิดข้อผิดพลาด')); btn.disabled=false; btn.textContent='❌ ยกเลิก'; }
+  } catch(e) { showToast('❌ เชื่อมต่อไม่ได้'); btn.disabled=false; btn.textContent='❌ ยกเลิก'; }
+}
+
+// ── HELPERS ─────────────────────────────────────────────────────
+function formatDateTH(str) {
+  if (!str) return '-';
+  const d = new Date(str + 'T00:00:00');
+  const days = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} (${days[d.getDay()]})`;
+}
+
+function formatSlots(slots) {
+  if (!slots) return '-';
+  return String(slots).split(',').map(s => s.trim()).join('<br>');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
