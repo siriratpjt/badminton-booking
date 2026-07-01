@@ -406,8 +406,7 @@ async function loadStatusGrid() {
       const icon=bk?(bk.status==='CONFIRMED'?'✓':bk.status==='CANCELLED'?'✗':'⏳'):'';
       const lbl=bk?`${icon}<span style="font-size:7px;font-weight:400;margin-top:1px;display:block;max-width:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(bk.name||'').slice(0,5)}</span>`:'';
       const oc=bk?`showDetail('${bk.bookingId}')`:'' ;
-      h+=`<td><div class="sc ${cls}${bk?' clickable':''}" title="${bk?bk.name+' '+bk.phone:''}" onclick="${oc}">${lbl}</div></td>`;
-    });
+      h+=`<td><div class="sc ${cls}${bk?' clickable':''}" style="height:42px;flex-direction:column;display:flex;align-items:center;justify-content:center" title="${bk?bk.name+' '+bk.phone:''}" onclick="${oc}">${lbl}</div></td>`;
     h+='</tr>';
   });
   c.innerHTML=h+'</tbody></table>';
