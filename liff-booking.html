@@ -6,210 +6,235 @@
 <title>จองสนามแบดมินตัน สายฟ้าฟาด</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; }
-  .header { background: #06C755; color: white; padding: 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-  .header h1 { font-size: 18px; font-weight: 700; }
-  .header p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
-  .steps { display: flex; background: white; border-bottom: 1px solid #e0e0e0; }
-  .step { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; color: #999; border-bottom: 3px solid transparent; }
-  .step.active { color: #06C755; border-bottom-color: #06C755; font-weight: 700; }
-  .step.done { color: #06C755; }
-  .section { display: none; padding: 16px; }
-  .section.active { display: block; }
-  .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-  .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #222; }
-  label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; margin-top: 10px; }
-  label:first-child { margin-top: 0; }
-  input { width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-  input:focus { border-color: #06C755; }
-  .btn { display: block; width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 12px; }
-  .btn-primary { background: #06C755; color: white; }
-  .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-  .btn-outline { background: white; color: #06C755; border: 2px solid #06C755; }
-  .grid-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #e0e0e0; }
-  .grid-table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
-  .grid-table th { background: #06C755; color: white; padding: 8px 6px; text-align: center; white-space: nowrap; }
-  .grid-table th:first-child { position: sticky; left: 0; z-index: 10; min-width: 72px; }
-  .grid-table td { padding: 0; border: 1px solid #e8e8e8; }
-  .grid-table td:first-child { background: #f8f8f8; font-weight: 700; font-size: 11px; text-align: center; padding: 6px 4px; white-space: nowrap; position: sticky; left: 0; z-index: 5; min-width: 72px; }
-  .cell { width: 44px; height: 36px; cursor: pointer; transition: background 0.15s; }
-  .cell.available { background: white; }
-  .cell.available:hover { background: #d4f5e2; }
-  .cell.booked { background: #e0e0e0; cursor: not-allowed; }
-  .cell.selected { background: #06C755; }
-  .legend { display: flex; gap: 12px; margin-bottom: 10px; font-size: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-box { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #ddd; }
-  .legend-box.white { background: white; }
-  .legend-box.gray { background: #e0e0e0; }
-  .legend-box.green { background: #06C755; }
-  .summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
-  .summary-row:last-child { border: none; }
-  .total-row { font-weight: 700; font-size: 15px; color: #06C755; margin-top: 8px; padding-top: 8px; border-top: 2px solid #e0e0e0; }
-  .qr-amount { text-align: center; font-size: 22px; font-weight: 700; color: #06C755; margin: 10px 0 4px; }
-  .qr-sub { text-align: center; font-size: 12px; color: #888; }
-  .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-  .alert-info { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #06C755; }
-  .alert-warn { background: #fff3e0; color: #e65100; border-left: 4px solid #ff9800; }
-  .loading { text-align: center; padding: 40px; color: #888; font-size: 14px; }
-  .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #06C755; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; border-radius: 20px; padding: 3px 10px; font-size: 12px; margin: 2px; }
-  .price-note { font-size: 11px; color: #777; margin-top: 8px; line-height: 1.6; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; -webkit-tap-highlight-color: transparent; }
+.header { background: #06C755; color: white; padding: 14px 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.header h1 { font-size: 17px; font-weight: 700; }
+.header p  { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+.steps { display: flex; background: white; border-bottom: 1px solid #e0e0e0; }
+.step  { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; color: #bbb; border-bottom: 3px solid transparent; transition: all .2s; }
+.step.active { color: #06C755; border-bottom-color: #06C755; font-weight: 700; }
+.step.done   { color: #06C755; }
+.section { display: none; padding: 16px; padding-bottom: 32px; }
+.section.active { display: block; }
+.card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+.card h2 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #222; }
+label { display: block; font-size: 13px; color: #555; margin: 10px 0 4px; font-weight: 600; }
+label:first-of-type { margin-top: 0; }
+input[type="date"], input[type="text"], input[type="tel"] { width: 100%; padding: 11px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: border-color .2s; }
+input:focus { border-color: #06C755; }
+.btn { display: block; width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: opacity .15s; }
+.btn:active { opacity: .8; }
+.btn-primary { background: #06C755; color: white; }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+.btn-outline { background: white; color: #06C755; border: 2px solid #06C755; }
+.btn-line    { background: #06C755; color: white; }
+.btn-dark    { background: #1a1a2e; color: white; }
+.grid-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #e0e0e0; -webkit-overflow-scrolling: touch; }
+.grid-table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+.grid-table th { background: #1a1a2e; color: white; padding: 8px 6px; text-align: center; white-space: nowrap; }
+.grid-table th:first-child { position: sticky; left: 0; z-index: 10; min-width: 72px; background: #1a1a2e; }
+.grid-table td { padding: 0; border: 1px solid #e8e8e8; }
+.grid-table td:first-child { background: #f8f8f8; font-weight: 700; font-size: 11px; text-align: center; padding: 6px 4px; white-space: nowrap; position: sticky; left: 0; z-index: 5; min-width: 72px; }
+.cell { width: 42px; height: 34px; cursor: pointer; transition: background .1s; }
+.cell.available      { background: white; }
+.cell.available:hover{ background: #d4f5e2; }
+.cell.booked         { background: #e0e0e0; cursor: not-allowed; }
+.cell.selected       { background: #06C755; }
+.legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-box { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #ddd; }
+.sum-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+.sum-row.total { font-weight: 700; font-size: 15px; color: #06C755; margin-top: 8px; padding-top: 8px; border-top: 2px solid #e0e0e0; border-bottom: none; }
+.alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.alert-info { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #06C755; }
+.alert-warn { background: #fff3e0; color: #e65100; border-left: 4px solid #ff9800; }
+.alert-red  { background: #fce4ec; color: #c62828; border-left: 4px solid #f44336; }
+.loading { text-align: center; padding: 40px 16px; color: #888; }
+.spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #06C755; border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tag { display: inline-block; background: #e8f5e9; color: #2e7d32; border-radius: 20px; padding: 3px 10px; font-size: 12px; margin: 2px; }
+.price-note { font-size: 11px; color: #777; margin-top: 10px; line-height: 1.7; background: #f8f8f8; padding: 10px 12px; border-radius: 8px; }
+.booking-id-box { background: #1a1a2e; color: #06C755; border-radius: 10px; padding: 12px 16px; text-align: center; margin: 8px 0; }
+.booking-id-box .bk-label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+.booking-id-box .bk-id    { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+.qr-amount { text-align: center; font-size: 24px; font-weight: 700; color: #06C755; margin: 8px 0 2px; }
+.qr-sub    { text-align: center; font-size: 12px; color: #888; margin-bottom: 4px; }
+.err-msg { color: #c62828; font-size: 13px; margin-top: 8px; display: none; text-align: center; }
 </style>
 </head>
 <body>
 
 <script>
-  const LIFF_ID      = '2010567855-ocpXr5cA';
-  const API_URL      = 'https://script.google.com/macros/s/AKfycbzX-0vPgc4YdgF61tmbj0b4gU4nO19S4HB0riELREOA_im37XxYKBtg6B7ci69KyyZN/exec';
-  const PROMPTPAY_ID = '3769900027483';
-  const COURTS       = ['C1','C2','C3','C4','C5','C6','C7','C8'];
+// ── CONFIG — แก้ตรงนี้ ──────────────────────────────────────────
+const LIFF_ID      = '2010567855-ocpXr5cA';
+const API_URL      = 'https://script.google.com/macros/s/AKfycbzX-0vPgc4YdgF61tmbj0b4gU4nO19S4HB0riELREOA_im37XxYKBtg6B7ci69KyyZN/exec';
+const PROMPTPAY_ID = '3769900027483';
+const COURTS       = ['C1','C2','C3','C4','C5','C6','C7','C8'];
+const LINE_OA_ID   = '@your_oa_id';   // ← เปลี่ยนเป็น @ID LINE OA ของคุณ
 </script>
 
+<!-- HEADER -->
 <div class="header">
   <h1>🏸 สายฟ้าฟาด Court Booking</h1>
   <p id="user-greeting">กำลังโหลด...</p>
 </div>
 
+<!-- STEP INDICATOR -->
 <div class="steps">
-  <div class="step active" id="step1">① วันที่</div>
-  <div class="step" id="step2">② เลือกคอร์ท</div>
-  <div class="step" id="step3">③ ข้อมูล</div>
-  <div class="step" id="step4">④ ชำระเงิน</div>
+  <div class="step active" id="s1">① วันที่</div>
+  <div class="step"        id="s2">② สนาม</div>
+  <div class="step"        id="s3">③ ข้อมูล</div>
+  <div class="step"        id="s4">④ ชำระเงิน</div>
 </div>
 
-<!-- SECTION 1: DATE -->
+<!-- ── STEP 1: DATE ── -->
 <div class="section active" id="sec1">
   <div class="card">
     <h2>📅 เลือกวันที่จอง</h2>
     <label>วันที่</label>
     <input type="date" id="booking-date">
     <div class="price-note">
-      🕐 จันทร์–ศุกร์ เปิด 13:00–01:00 | เสาร์–อาทิตย์ เปิด 10:00–01:00<br>
-      💰 จ–ศ 13:00–16:00 = 220฿/ชม. | 16:00+ = 240฿/ชม. | ส–อ ทั้งวัน = 240฿/ชม.
+      🕐 จ–ศ เปิด 13:00–24:00 | ส–อ เปิด 10:00–24:00<br>
+      💰 จ–ศ 13:00–17:00 = 220฿/ชม. | 17:00–24:00 = 240฿/ชม. | ส–อ ทั้งวัน = 240฿/ชม.
     </div>
     <button class="btn btn-primary" onclick="goToGrid()">ถัดไป →</button>
   </div>
 </div>
 
-<!-- SECTION 2: GRID -->
+<!-- ── STEP 2: GRID ── -->
 <div class="section" id="sec2">
   <div class="card">
     <h2>🎯 เลือกสนาม + เวลา</h2>
     <div class="legend">
-      <div class="legend-item"><div class="legend-box white"></div> ว่าง</div>
-      <div class="legend-item"><div class="legend-box gray"></div> จองแล้ว</div>
-      <div class="legend-item"><div class="legend-box green"></div> เลือก</div>
+      <div class="legend-item"><div class="legend-box" style="background:white"></div>ว่าง</div>
+      <div class="legend-item"><div class="legend-box" style="background:#e0e0e0"></div>จองแล้ว</div>
+      <div class="legend-item"><div class="legend-box" style="background:#06C755"></div>เลือก</div>
     </div>
-    <div id="grid-container"><div class="loading"><div class="spinner"></div><br>กำลังโหลดข้อมูล...</div></div>
-    <div id="selection-summary" style="margin-top:12px; display:none;">
-      <div style="font-size:13px; font-weight:700; margin-bottom:4px;">ที่เลือก:</div>
+    <div id="grid-container"><div class="loading"><div class="spinner"></div><br>กำลังโหลด...</div></div>
+    <div id="selection-summary" style="margin-top:12px;display:none">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px">ที่เลือก:</div>
       <div id="selected-tags"></div>
-      <div style="font-size:14px; font-weight:700; color:#06C755; margin-top:8px;">รวม: <span id="total-price">0</span> บาท</div>
+      <div style="font-size:15px;font-weight:700;color:#06C755;margin-top:10px">รวม: <span id="total-price">0</span> บาท</div>
     </div>
-    <button class="btn btn-outline" onclick="goTo(1)" style="margin-top:8px;">← ย้อนกลับ</button>
-    <button class="btn btn-primary" id="btn-next-contact" onclick="goToContact()" disabled>ถัดไป →</button>
+    <button class="btn btn-outline" onclick="goTo(1)" style="margin-top:10px">← ย้อนกลับ</button>
+    <button class="btn btn-primary" id="btn-next2" onclick="goToContact()" disabled>ถัดไป →</button>
   </div>
 </div>
 
-<!-- SECTION 3: CONTACT -->
+<!-- ── STEP 3: CONTACT + CONFIRM ── -->
 <div class="section" id="sec3">
   <div class="card">
     <h2>👤 ข้อมูลผู้จอง</h2>
     <label>ชื่อ-นามสกุล *</label>
     <input type="text" id="name" placeholder="สมชาย ใจดี">
-    <label>เบอร์โทร *</label>
-    <input type="tel" id="phone" placeholder="0812345678" maxlength="10">
-    <button class="btn btn-outline" onclick="goTo(2)" style="margin-top:8px;">← ย้อนกลับ</button>
-    <button class="btn btn-primary" onclick="goToPayment()">ถัดไป →</button>
+    <label>เบอร์โทรศัพท์ *</label>
+    <input type="tel" id="phone" placeholder="0812345678" maxlength="10" inputmode="numeric">
+    <div class="err-msg" id="contact-err">กรุณากรอกชื่อและเบอร์โทรให้ถูกต้อง</div>
+    <button class="btn btn-outline" onclick="goTo(2)" style="margin-top:10px">← ย้อนกลับ</button>
+    <button class="btn btn-primary" id="btn-book" onclick="submitBooking()">✅ จองเลย</button>
   </div>
   <div class="card">
     <h2>📋 สรุปการจอง</h2>
-    <div id="booking-summary-contact"></div>
+    <div id="summary-contact"></div>
   </div>
 </div>
 
-<!-- SECTION 4: PAYMENT -->
+<!-- ── STEP 4: SUCCESS + PAYMENT ── -->
 <div class="section" id="sec4">
+  <div class="card" style="text-align:center">
+    <div style="font-size:48px;margin-bottom:6px">✅</div>
+    <h2 style="font-size:18px;margin-bottom:4px">จองสำเร็จแล้ว!</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:14px">สล็อตถูกจองไว้แล้ว — กรุณาชำระเงินตาม QR ด้านล่าง</p>
+    <div class="booking-id-box">
+      <div class="bk-label">รหัสการจอง</div>
+      <div class="bk-id" id="done-bkid">—</div>
+    </div>
+    <button class="btn btn-outline" onclick="copyBookingId()" style="font-size:13px;padding:10px;margin-top:6px">📋 คัดลอกรหัสจอง</button>
+  </div>
+
   <div class="card">
     <h2>💳 สแกน QR ชำระเงิน</h2>
-    <div class="alert alert-info">PromptPay • สายฟ้าฟาด Court Booking</div>
-    <img id="qr-img" width="220" height="220" style="display:block;margin:0 auto;border-radius:8px;" alt="PromptPay QR">
+    <div class="alert alert-info" style="margin-bottom:10px">PromptPay • เลขประจำตัวผู้เสียภาษี</div>
+    <div style="text-align:center">
+      <img id="qr-img" width="210" height="210" style="border-radius:8px;border:1px solid #eee" alt="PromptPay QR">
+    </div>
     <div class="qr-amount" id="qr-amount">0 บาท</div>
-    <div class="qr-sub">PromptPay Tax ID: 3769900027483</div>
+    <div class="qr-sub">Tax ID: <b>3769900027483</b></div>
   </div>
+
+  <div class="card">
+    <h2>📤 ขั้นตอนหลังชำระเงิน</h2>
+    <div class="alert alert-warn">
+      1️⃣ โอนเงินตาม QR ด้านบน<br>
+      2️⃣ แคปหน้าจอสลิป<br>
+      3️⃣ กดปุ่มด้านล่างเพื่อส่งสลิปให้เจ้าหน้าที่ทาง LINE<br>
+      4️⃣ เจ้าหน้าที่จะยืนยันภายใน 15 นาที
+    </div>
+    <button class="btn btn-line" onclick="openLineOA()" style="font-size:15px">
+      💬 ส่งสลิปให้เจ้าหน้าที่ทาง LINE
+    </button>
+    <div style="text-align:center;font-size:12px;color:#aaa;margin-top:8px" id="oa-id-hint"></div>
+  </div>
+
   <div class="card">
     <h2>📋 สรุปการจอง</h2>
-    <div id="booking-summary-pay"></div>
-    <div class="alert alert-warn" style="margin-top:12px;">⚠️ หลังโอนแล้ว กรุณาส่งสลิปให้เจ้าหน้าที่ทาง LINE เจ้าหน้าที่จะยืนยันภายใน 15 นาที</div>
-    <button class="btn btn-outline" onclick="goTo(3)">← ย้อนกลับ</button>
-    <button class="btn btn-primary" id="btn-confirm" onclick="submitBooking()">✅ ยืนยันการจอง</button>
+    <div id="summary-pay"></div>
   </div>
-</div>
 
-<!-- SUCCESS -->
-<div class="section" id="sec-done">
-  <div class="card" style="text-align:center; padding: 32px 16px;">
-    <div style="font-size:64px; margin-bottom:12px;">🎉</div>
-    <h2 style="font-size:20px; margin-bottom:8px;">จองสำเร็จแล้ว!</h2>
-    <p style="color:#555; font-size:14px; margin-bottom:16px;">เจ้าหน้าที่รับแจ้งแล้ว<br>กรุณาส่งสลิปเพื่อยืนยันการจอง</p>
-    <div style="background:#f0f4f8; border-radius:10px; padding:14px; margin-bottom:16px; text-align:left;">
-      <div id="done-detail" style="font-size:13px;"></div>
-    </div>
-    <button class="btn btn-outline" onclick="location.reload()">จองเพิ่มเติม</button>
-  </div>
+  <button class="btn btn-outline" onclick="location.reload()">🏸 จองเพิ่มเติม</button>
 </div>
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────
-let state = { date:'', dayType:'', slots:[], userId:'', displayName:'', bookingId:'' };
+const st = { date:'', dayType:'', slots:[], userId:'', displayName:'', bookingId:'' };
 
-// ── LIFF INIT ──────────────────────────────────────────────────
-liff.init({ liffId: LIFF_ID }).then(() => {
-  if (liff.isLoggedIn()) {
-    liff.getProfile().then(p => {
-      state.userId = p.userId;
-      state.displayName = p.displayName;
-      document.getElementById('user-greeting').textContent = 'สวัสดี ' + p.displayName + ' 👋';
-      const nameEl = document.getElementById('name');
-      if (!nameEl.value) nameEl.value = p.displayName;
-    });
-  } else {
-    liff.login();
+// ── LIFF INIT — ทำงานทั้งใน LINE และ browser ────────────────────
+(async () => {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (liff.isLoggedIn()) {
+      try {
+        const p = await liff.getProfile();
+        st.userId = p.userId;
+        st.displayName = p.displayName;
+        document.getElementById('user-greeting').textContent = 'สวัสดี ' + p.displayName + ' 👋';
+        const el = document.getElementById('name');
+        if (!el.value) el.value = p.displayName;
+      } catch(e) { document.getElementById('user-greeting').textContent = 'สายฟ้าฟาด Court Booking'; }
+    } else {
+      if (liff.isInClient()) {
+        liff.login();
+      } else {
+        document.getElementById('user-greeting').textContent = 'สายฟ้าฟาด Court Booking';
+      }
+    }
+  } catch(e) {
+    // ทำงานได้แม้ไม่ได้อยู่ใน LINE
+    document.getElementById('user-greeting').textContent = 'สายฟ้าฟาด Court Booking';
   }
-}).catch(() => {
-  document.getElementById('user-greeting').textContent = 'สายฟ้าฟาด Court Booking';
-});
+})();
 
-// Set min date = today (Bangkok)
-const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' });
-const dateEl = document.getElementById('booking-date');
-dateEl.min = todayStr;
-dateEl.value = todayStr;
+// Set min date = today BKK
+const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone:'Asia/Bangkok' });
+const dateEl   = document.getElementById('booking-date');
+dateEl.min     = todayStr;
+dateEl.value   = todayStr;
 
 // ── HELPERS ────────────────────────────────────────────────────
-function getDayType(dateStr) {
-  const day = new Date(dateStr + 'T00:00:00').getDay();
-  return (day === 0 || day === 6) ? 'weekend' : 'weekday';
-}
-
-function getSlots(dayType) {
-  const start = dayType === 'weekend' ? 10 : 13;
-  const slots = [];
-  for (let h = start; h < 25; h++) {
-    const h1 = h < 24 ? h : h - 24;
-    const h2 = (h+1) < 24 ? (h+1) : (h+1-24);
-    const p = n => String(n).padStart(2,'0');
-    slots.push(`${p(h1)}:00-${p(h2)}:00`);
+function getDayType(d) { const day=new Date(d+'T00:00:00').getDay(); return (day===0||day===6)?'weekend':'weekday'; }
+function getSlots(dt) {
+  const start = dt==='weekend'?10:13, res=[];
+  for (let h=start; h<24; h++) {
+    const p=n=>String(n<24?n:n-24).padStart(2,'0');
+    res.push(`${p(h)}:00-${p(h+1)}:00`);
   }
-  return slots;
+  return res;
 }
-
-function getPrice(slot, dayType) {
-  if (dayType === 'weekend') return 240;
-  return parseInt(slot) < 16 ? 220 : 240;
+function getPrice(slot, dt) { return (dt==='weekend'||parseInt(slot)>=17) ? 240 : 220; }
+function fmtDateTH(str) {
+  const d=new Date(str+'T00:00:00'), days=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} (${days[d.getDay()]})`;
 }
 
 // ── NAVIGATION ─────────────────────────────────────────────────
@@ -220,175 +245,184 @@ function goTo(n) {
     if (i+1 < n) s.classList.add('done');
     else if (i+1 === n) s.classList.add('active');
   });
-  document.getElementById('sec'+n).classList.add('active');
+  const el = document.getElementById('sec'+n);
+  if (el) el.classList.add('active');
   window.scrollTo(0,0);
 }
 
 async function goToGrid() {
   const d = document.getElementById('booking-date').value;
   if (!d) { alert('กรุณาเลือกวันที่'); return; }
-  state.date = d;
-  state.dayType = getDayType(d);
-  state.slots = [];
+  st.date = d; st.dayType = getDayType(d); st.slots = [];
   goTo(2);
   await buildGrid();
 }
 
 function goToContact() {
-  if (state.slots.length === 0) { alert('กรุณาเลือกอย่างน้อย 1 ช่อง'); return; }
-  renderSummary('booking-summary-contact');
+  if (!st.slots.length) { alert('กรุณาเลือกอย่างน้อย 1 ช่อง'); return; }
+  renderSummary('summary-contact');
   goTo(3);
-}
-
-function goToPayment() {
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  if (!name) { alert('กรุณากรอกชื่อ-นามสกุล'); return; }
-  if (!/^0[0-9]{8,9}$/.test(phone)) { alert('กรุณากรอกเบอร์โทรให้ถูกต้อง เช่น 0812345678'); return; }
-  const total = state.slots.reduce((s,x) => s+x.price, 0);
-  renderSummary('booking-summary-pay');
-  document.getElementById('qr-amount').textContent = total.toLocaleString() + ' บาท';
-  generateQR(total);
-  goTo(4);
 }
 
 // ── GRID ───────────────────────────────────────────────────────
 async function buildGrid() {
-  const container = document.getElementById('grid-container');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div><br>กำลังโหลดข้อมูล...</div>';
+  const c = document.getElementById('grid-container');
+  c.innerHTML = '<div class="loading"><div class="spinner"></div><br>กำลังโหลด...</div>';
   let bookedSet = new Set();
   try {
-    const r = await fetch(`${API_URL}?action=getAvailability&date=${state.date}`);
-    const data = await r.json();
-    if (data.success) data.booked.forEach(b => bookedSet.add(`${b.court}|${b.slot}`));
+    const r = await fetch(`${API_URL}?action=getAvailability&date=${st.date}`);
+    const d = await r.json();
+    if (d.success) d.booked.forEach(b => bookedSet.add(`${b.court}|${b.slot}`));
   } catch(e) {}
 
-  const slots = getSlots(state.dayType);
-  let html = '<div class="grid-wrap"><table class="grid-table"><thead><tr><th>เวลา</th>';
-  COURTS.forEach(c => html += `<th>${c}</th>`);
-  html += '</tr></thead><tbody>';
+  const slots = getSlots(st.dayType);
+  let h = '<div class="grid-wrap"><table class="grid-table"><thead><tr><th>เวลา</th>';
+  COURTS.forEach(co => h += `<th>${co}</th>`);
+  h += '</tr></thead><tbody>';
   slots.forEach(slot => {
-    html += `<tr><td>${slot}</td>`;
-    COURTS.forEach(court => {
-      const booked = bookedSet.has(`${court}|${slot}`);
-      const selected = state.slots.some(s => s.court===court && s.slot===slot);
-      const cls = booked ? 'booked' : selected ? 'selected' : 'available';
-      html += `<td><div class="cell ${cls}" data-court="${court}" data-slot="${slot}" onclick="toggleCell(this)"></div></td>`;
+    h += `<tr><td>${slot}</td>`;
+    COURTS.forEach(co => {
+      const bk  = bookedSet.has(`${co}|${slot}`);
+      const sel = st.slots.some(s => s.court===co && s.slot===slot);
+      h += `<td><div class="cell ${bk?'booked':sel?'selected':'available'}" data-c="${co}" data-s="${slot}" onclick="toggleCell(this)"></div></td>`;
     });
-    html += '</tr>';
+    h += '</tr>';
   });
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
+  c.innerHTML = h + '</tbody></table></div>';
 }
 
 function toggleCell(el) {
   if (el.classList.contains('booked')) return;
-  const {court, slot} = el.dataset;
-  const idx = state.slots.findIndex(s => s.court===court && s.slot===slot);
-  if (idx >= 0) {
-    state.slots.splice(idx,1);
-    el.className = 'cell available';
-  } else {
-    state.slots.push({ court, slot, price: getPrice(slot, state.dayType) });
-    el.className = 'cell selected';
-  }
-  updateSelectionDisplay();
+  const {c: court, s: slot} = el.dataset;
+  const idx = st.slots.findIndex(x => x.court===court && x.slot===slot);
+  if (idx >= 0) { st.slots.splice(idx,1); el.className='cell available'; }
+  else           { st.slots.push({court, slot, price:getPrice(slot,st.dayType)}); el.className='cell selected'; }
+  updateSelDisplay();
 }
 
-function updateSelectionDisplay() {
-  const sum = document.getElementById('selection-summary');
-  const btn = document.getElementById('btn-next-contact');
-  if (!state.slots.length) { sum.style.display='none'; btn.disabled=true; return; }
-  sum.style.display='block';
-  btn.disabled=false;
-  const total = state.slots.reduce((s,x) => s+x.price, 0);
-  document.getElementById('total-price').textContent = total.toLocaleString();
-  const map = {};
-  state.slots.forEach(({court,slot}) => { (map[court]=map[court]||[]).push(slot); });
+function updateSelDisplay() {
+  const sum=document.getElementById('selection-summary'), btn=document.getElementById('btn-next2');
+  if (!st.slots.length) { sum.style.display='none'; btn.disabled=true; return; }
+  sum.style.display='block'; btn.disabled=false;
+  document.getElementById('total-price').textContent = st.slots.reduce((s,x)=>s+x.price,0).toLocaleString();
+  const map={};
+  st.slots.forEach(({court,slot})=>(map[court]=map[court]||[]).push(slot));
   document.getElementById('selected-tags').innerHTML =
-    Object.entries(map).map(([c,ss]) => ss.sort().map(s => `<span class="tag">${c} ${s}</span>`).join('')).join('');
+    Object.entries(map).sort().map(([c,ss])=>ss.sort().map(s=>`<span class="tag">${c} ${s}</span>`).join('')).join('');
 }
 
 // ── SUMMARY ────────────────────────────────────────────────────
 function renderSummary(id) {
-  const total = state.slots.reduce((s,x) => s+x.price, 0);
-  const d = new Date(state.date+'T00:00:00');
-  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
-  const label = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} (${days[d.getDay()]})`;
-  const map = {};
-  state.slots.forEach(({court,slot,price}) => (map[court]=map[court]||[]).push({slot,price}));
-  let rows = `<div class="summary-row"><span>วันที่</span><span>${label}</span></div>`;
-  Object.entries(map).forEach(([c,items]) => {
-    items.sort((a,b)=>a.slot.localeCompare(b.slot)).forEach(({slot,price}) => {
-      rows += `<div class="summary-row"><span>${c} ${slot}</span><span>${price.toLocaleString()}฿</span></div>`;
+  const total = st.slots.reduce((s,x)=>s+x.price,0);
+  let h = `<div class="sum-row"><span>วันที่</span><span>${fmtDateTH(st.date)}</span></div>`;
+  const map={};
+  st.slots.forEach(({court,slot,price})=>(map[court]=map[court]||[]).push({slot,price}));
+  Object.entries(map).sort().forEach(([c,items])=>{
+    items.sort((a,b)=>a.slot.localeCompare(b.slot)).forEach(({slot,price})=>{
+      h+=`<div class="sum-row"><span>${c} ${slot}</span><span>${price.toLocaleString()}฿</span></div>`;
     });
   });
-  rows += `<div class="summary-row total-row"><span>รวม</span><span>${total.toLocaleString()} บาท</span></div>`;
-  document.getElementById(id).innerHTML = rows;
+  h+=`<div class="sum-row total"><span>รวมทั้งหมด</span><span>${total.toLocaleString()} บาท</span></div>`;
+  document.getElementById(id).innerHTML = h;
 }
 
-// ── SUBMIT ─────────────────────────────────────────────────────
+// ── SUBMIT BOOKING ─────────────────────────────────────────────
 async function submitBooking() {
-  const btn = document.getElementById('btn-confirm');
-  btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...';
-  const name = document.getElementById('name').value.trim();
+  const name  = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  const total = state.slots.reduce((s,x) => s+x.price, 0);
-  const sel = state.slots.map(s => `${s.court}:${s.slot}`).join(',');
+  const errEl = document.getElementById('contact-err');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent='กรุณากรอกชื่อ-นามสกุล'; errEl.style.display='block'; return; }
+  if (!/^0[0-9]{8,9}$/.test(phone)) { errEl.textContent='กรุณากรอกเบอร์ให้ถูกต้อง เช่น 0812345678'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('btn-book');
+  btn.disabled=true; btn.textContent='⏳ กำลังจอง...';
+
+  const total = st.slots.reduce((s,x)=>s+x.price,0);
+  const sel   = st.slots.map(s=>`${s.court}:${s.slot}`).join(',');
   try {
-    const url = `${API_URL}?action=createBooking&date=${encodeURIComponent(state.date)}&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&userId=${encodeURIComponent(state.userId)}&selections=${encodeURIComponent(sel)}&amount=${total}`;
+    const url = `${API_URL}?action=createBooking` +
+      `&date=${encodeURIComponent(st.date)}` +
+      `&name=${encodeURIComponent(name)}` +
+      `&phone=${encodeURIComponent(phone)}` +
+      `&userId=${encodeURIComponent(st.userId||'guest')}` +
+      `&selections=${encodeURIComponent(sel)}` +
+      `&amount=${total}`;
     const r = await fetch(url);
-    const data = await r.json();
-    if (data.success) {
-      state.bookingId = data.bookingId;
-      showDone(name, total);
+    const d = await r.json();
+    if (d.success) {
+      st.bookingId = d.bookingId;
+      showPaymentScreen(name, total);
     } else {
-      alert('เกิดข้อผิดพลาด: ' + (data.error||'กรุณาลองใหม่'));
-      btn.disabled=false; btn.textContent='✅ ยืนยันการจอง';
+      errEl.textContent = '❌ ' + (d.error||'เกิดข้อผิดพลาด กรุณาลองใหม่');
+      errEl.style.display='block';
+      btn.disabled=false; btn.textContent='✅ จองเลย';
     }
   } catch(e) {
-    alert('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่');
-    btn.disabled=false; btn.textContent='✅ ยืนยันการจอง';
+    errEl.textContent = '❌ เชื่อมต่อไม่ได้ กรุณาลองใหม่';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='✅ จองเลย';
   }
 }
 
-function showDone(name, total) {
-  const d = new Date(state.date+'T00:00:00');
-  const dateLabel = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
-  const courts = [...new Set(state.slots.map(s=>s.court))].join(', ');
-  document.getElementById('done-detail').innerHTML =
-    `<div class="summary-row"><span>รหัสจอง</span><span style="font-weight:700;color:#06C755">${state.bookingId}</span></div>` +
-    `<div class="summary-row"><span>ชื่อ</span><span>${name}</span></div>` +
-    `<div class="summary-row"><span>วันที่</span><span>${dateLabel}</span></div>` +
-    `<div class="summary-row"><span>สนาม</span><span>${courts}</span></div>` +
-    `<div class="summary-row total-row"><span>ยอดชำระ</span><span>${total.toLocaleString()} บาท</span></div>`;
+function showPaymentScreen(name, total) {
+  document.getElementById('done-bkid').textContent = st.bookingId;
+  document.getElementById('qr-amount').textContent  = total.toLocaleString() + ' บาท';
+  document.getElementById('oa-id-hint').textContent = LINE_OA_ID !== '@your_oa_id' ? 'LINE OA: ' + LINE_OA_ID : '';
+  generateQR(total);
+  renderSummary('summary-pay');
+  // Mark all steps done
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.step').forEach(s=>s.classList.add('done'));
-  document.getElementById('sec-done').classList.add('active');
+  document.querySelectorAll('.step').forEach(s=>{s.classList.remove('active');s.classList.add('done');});
+  document.getElementById('sec4').classList.add('active');
   window.scrollTo(0,0);
+}
+
+function copyBookingId() {
+  const id = st.bookingId;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(id).then(()=>alert('คัดลอกรหัสแล้ว: ' + id));
+  } else {
+    alert('รหัสจอง: ' + id);
+  }
+}
+
+function openLineOA() {
+  const name  = document.getElementById('name').value.trim();
+  const msg   = `สวัสดีครับ ขอส่งสลิปการชำระเงิน\nรหัสจอง: ${st.bookingId}\nชื่อ: ${name}`;
+  if (LINE_OA_ID === '@your_oa_id') {
+    alert('กรุณาส่งสลิปและรหัสจอง ' + st.bookingId + ' มาให้เจ้าหน้าที่ทาง LINE ด้วยนะคะ');
+    return;
+  }
+  const url = `https://line.me/R/ti/p/${encodeURIComponent(LINE_OA_ID)}`;
+  try {
+    if (typeof liff !== 'undefined' && liff.isInClient()) {
+      liff.openWindow({ url, external: false });
+    } else {
+      window.open(url, '_blank');
+    }
+  } catch(e) { window.open(url, '_blank'); }
 }
 
 // ── PROMPTPAY QR ───────────────────────────────────────────────
 function generateQR(amount) {
-  const payload = buildPromptPayPayload(PROMPTPAY_ID, amount);
-  const url = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(payload)}`;
-  document.getElementById('qr-img').src = url;
+  const payload = buildPromptPay(PROMPTPAY_ID, amount);
+  document.getElementById('qr-img').src =
+    `https://api.qrserver.com/v1/create-qr-code/?size=210x210&margin=10&data=${encodeURIComponent(payload)}`;
 }
 
-function buildPromptPayPayload(taxId, amount) {
+function buildPromptPay(taxId, amount) {
   const f = (id,v) => id + String(v).length.toString().padStart(2,'0') + v;
   const acct = f('00','A000000677010111') + f('02',taxId);
   let p = f('00','01') + f('01','11') + f('29',acct) + f('53','764') + f('54',amount.toFixed(2)) + f('58','TH') + '6304';
-  return p + crc16ccitt(p);
+  return p + crc16(p);
 }
 
-function crc16ccitt(str) {
-  let crc = 0xFFFF;
-  for (let i=0;i<str.length;i++) {
-    crc ^= str.charCodeAt(i) << 8;
-    for (let j=0;j<8;j++) crc = (crc&0x8000) ? ((crc<<1)^0x1021) : (crc<<1);
-  }
-  return (crc&0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+function crc16(str) {
+  let c=0xFFFF;
+  for(let i=0;i<str.length;i++){c^=str.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021):(c<<1);}
+  return(c&0xFFFF).toString(16).toUpperCase().padStart(4,'0');
 }
 </script>
 </body>
